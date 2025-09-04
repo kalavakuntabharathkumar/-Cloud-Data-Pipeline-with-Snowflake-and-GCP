@@ -1,0 +1,19 @@
+
+name: 'nimbusflow'
+version: '1.0.0'
+config-version: 2
+
+profile: 'nimbusflow'
+
+model-paths: ['models']
+analysis-paths: ['analysis']
+test-paths: ['tests']
+target-path: 'target'
+clean-targets: ['target', 'dbt_packages']
+
+models:
+  nimbusflow:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

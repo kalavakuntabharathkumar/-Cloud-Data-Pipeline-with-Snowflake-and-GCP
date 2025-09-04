@@ -1,0 +1,8 @@
+name: "dbt_nimbus"
+version: "1.0.0"
+profile: "nimbus_duckdb"
+model-paths: ["models"]
+target-path: "target"
+models:
+  dbt_nimbus:
+    +materialized: table

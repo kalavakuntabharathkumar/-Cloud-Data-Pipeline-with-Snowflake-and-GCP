@@ -1,0 +1,6 @@
+nimbus_duckdb:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../../data/warehouse/nimbus.duckdb"

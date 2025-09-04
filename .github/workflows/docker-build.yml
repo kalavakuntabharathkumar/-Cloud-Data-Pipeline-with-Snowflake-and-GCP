@@ -1,0 +1,17 @@
+
+name: Docker Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Airflow image
+        run: docker build -t nimbusflow/airflow:latest docker/airflow
+      - name: Build dbt image
+        run: docker build -t nimbusflow/dbt:latest docker/dbt

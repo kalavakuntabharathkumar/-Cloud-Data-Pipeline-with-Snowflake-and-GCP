@@ -1,0 +1,104 @@
+
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+
+  airflow-webserver:
+    build:
+      context: ./docker/airflow
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: 30
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+    depends_on: [postgres, redis, airflow-scheduler]
+    ports: ["8080:8080"]
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./great_expectations:/opt/great_expectations
+      - ./dbt:/opt/dbt
+      - airflow_logs:/opt/airflow/logs
+
+  airflow-scheduler:
+    build:
+      context: ./docker/airflow
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: 30
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+    depends_on: [postgres, redis]
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./great_expectations:/opt/great_expectations
+      - ./dbt:/opt/dbt
+      - airflow_logs:/opt/airflow/logs
+
+  airflow-worker:
+    build:
+      context: ./docker/airflow
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+    depends_on: [postgres, redis, airflow-scheduler]
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./great_expectations:/opt/great_expectations
+      - ./dbt:/opt/dbt
+      - airflow_logs:/opt/airflow/logs
+
+  flower:
+    image: mher/flower:2.0.1
+    command: ["flower", "--broker=redis://redis:6379/0"]
+    ports: ["5555:5555"]
+    depends_on: [redis]
+
+  dbt:
+    build:
+      context: ./docker/dbt
+    env_file:
+      - .env
+    volumes:
+      - ./dbt:/usr/app/dbt
+    working_dir: /usr/app/dbt
+    command: ["sleep", "infinity"]
+
+  generator:
+    build:
+      context: ./docker/generator
+    env_file:
+      - .env
+    command: ["python", "scripts/benchmark_stream.py", "--rate", "10000"]  # ~10k events/sec
+    volumes:
+      - ./scripts:/usr/app/scripts
+      - ./data:/usr/app/data
+
+volumes:
+  airflow_logs:
+  pgdata:

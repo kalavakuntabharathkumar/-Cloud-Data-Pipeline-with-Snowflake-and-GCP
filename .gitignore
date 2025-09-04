@@ -1,0 +1,60 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+.python-version
+
+# Pytest cache
+.pytest_cache/
+
+# dbt
+target/
+dbt_packages/
+
+# Airflow
+airflow/logs/
+airflow/.airflowenv
+airflow/.env
+dags/__pycache__/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+
+# Secrets
+.env.local
+.secrets
+.vault-token
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
